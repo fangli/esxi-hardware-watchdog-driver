@@ -1,0 +1,23 @@
+#!/bin/sh
+
+
+if [ "$1" == "daemon" ]; then
+
+    # Test the watchdog
+    /bin/ipmitool_wd mc watchdog reset && ok=1
+    if [ "$ok" == "1" ]; then
+        logger -t hardware-watchdog "watchdog keepalive daemon started successfully."
+    else
+        logger -t hardware-watchdog "Error occurred when starting hardware watchdog daemon! Please try run 'ipmitool_wd mc watchdog reset' in SSH shell to see what happened."
+        exit 1
+    fi
+
+    while true
+    do
+        /bin/ipmitool_wd mc watchdog reset > /dev/null 2>&1
+        /bin/sleep 60
+    done
+else
+    logger -t hardware-watchdog "Starting hardware watchdog daemon..."
+    /bin/nohup /etc/rc.local.d/hardware_watchdog_keepalive daemon &
+fi
